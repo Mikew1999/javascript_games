@@ -1,10 +1,18 @@
 // set canvas and context
 const canvas = document.getElementById("canvas");
 const canvasContext = canvas.getContext("2d");
+// init scores
 let playerLeftScore = 0;
 let playerRightScore = 0;
+// init key pressed
 let keyPressed;
+// init interval
 let interval;
+let radians;
+let angle;
+let gameEnded = false;
+let winner;
+// 
 const offset = 50;
 
 function DegreesToRadians(degrees) {
@@ -41,15 +49,32 @@ class Ball
     // moves the ball based on it's angle
     move()
     {
-        this.x += Math.floor(Math.cos(DegreesToRadians(this.angle)) * this.speed);
-        this.y += Math.floor(Math.sin(DegreesToRadians(this.angle)) * this.speed);
+        radians = DegreesToRadians(this.angle);
+        if (this.angle >= 75 && this.angle <= 90)
+        {
+            this.angle = 40;
+        }
+        else if (this.angle > 90 && this.angle <= 105)
+        {
+            this.angle = 130;
+        }
+        this.x += Math.floor(Math.cos(radians) * this.speed);
+        this.y += Math.floor(Math.sin(radians) * this.speed);
     }
 }
 
 // creates instances of classes
 const playerLeft = new Paddle(offset, 180);
 const playerRight = new Paddle(canvas.width - offset, 180);
-let ball = new Ball(Math.floor(canvas.width / 2), 225, Math.floor(Math.random() * 260));
+let ball = new Ball(Math.floor(canvas.width / 2), 225, Math.floor(Math.random() * 360));
+if (ball.angle >= 75 && ball.angle <= 90)
+{
+    ball.angle = 40;
+}
+else if (ball.angle > 90 && ball.angle <= 105)
+{
+    ball.angle = 130;
+}
 
 
 // function to create rectangle
@@ -105,15 +130,121 @@ function update()
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
     // move the ball
     ball.move();
+    checkHitPaddle();
+
 }
 
 // function to check if the ball hits the top 
 function checkHitY()
 {
-    if (ball.y <= 0)
+    // check if ball hit top or bottom
+    if (ball.y <= 10 || ball.y >= (canvas.height - 10))
     {
+        // set new angle
+        ball.angle = (360 - ball.angle);
         console.log(ball.angle);
-        console.log(DegreesToRadians(ball.angle));
+        /* 
+            handle edge cases
+        */
+        if (ball.angle >= 60 && ball.angle <= 90)
+        {
+            ball.angle = 40;
+        }
+        else if (ball.angle >= 90 && ball.angle <= 110)
+        {
+            ball.angle = 130;
+        }
+        else if (ball.angle >= 240 && ball.angle <= 270)
+        {
+            // needs changing
+            ball.angle = 200;
+        }
+        else if (ball.angle >= 270 && ball.angle <= 300)
+        {
+            ball.angle = 330
+        }
+        else if (ball.angle >= 200 && ball.angle <= 230)
+        {
+            ball.angle = 200
+        }
+        else if (ball.angle >= 300 && ball.angle <= 330)
+        {
+            ball.angle = 300
+        }
+
+    }
+}
+
+// function to check if ball hit paddles
+function checkHitPaddle()
+{
+    if (ball.x <= 60 && ball.x >= 50 && ball.y <= (playerLeft.y + 75) && ball.y >= (playerLeft.y - 75))
+    {
+        console.log("1")
+        ball.angle = (180 - ball.angle);
+        if (ball.angle > 330)
+        {
+            ball.angle = 300;
+        }
+        else if (ball.angle < 30)
+        {
+            ball.angle = 50;
+        }
+    }
+    else if (ball.x >= (canvas.width - 60) && ball.x <= (canvas.width - 50) && ball.y <= (playerRight.y + 75) && ball.y >= (playerRight.y - 75))
+    {
+        console.log("2")
+        ball.angle = (180 - ball.angle);
+        if (ball.angle > 330)
+        {
+            ball.angle = 300;
+        }
+        else if (ball.angle < 30)
+        {
+            ball.angle = 50;
+        }
+    }
+}
+
+function resetGame()
+{
+    ball = new Ball(Math.floor(canvas.width / 2), 225, Math.floor(Math.random() * 360));
+    if (playerLeftScore == 10)
+    {
+        winner = 'Player Left ';
+        endGame();
+    }
+    else if (playerRightScore == 10)
+    {
+        winner = 'Player Right ';
+        endGame();
+    }
+}
+
+function endGame()
+{
+    clearInterval(interval);
+    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+    createRect(0,0,canvas.width, canvas.height, "black");
+    canvasContext.font = "20px Arial"
+    canvasContext.fillStyle = "#00FF42"
+    canvasContext.fillText(`Game Over! ${winner} wins!`,200, 50);
+    canvasContext.fillText(`Score: ${playerRightScore}`,canvas.width - 340, 250);
+    canvasContext.fillText(`Score: ${playerLeftScore}`,340, 250);
+    winner = undefined;
+}
+
+function score()
+{
+    if (ball.x <= 0)
+    {
+        playerRightScore += 1;
+        resetGame();
+    }
+    if (ball.x >= canvas.width)
+    {
+        playerLeftScore += 1;
+        resetGame();
     }
 }
 
@@ -122,6 +253,7 @@ function show()
     update();
     checkHitY();
     draw();
+    score();
 }
 
 function gameLoop()
@@ -131,7 +263,8 @@ function gameLoop()
 
 window.onload = () =>
 {
-    interval = setInterval(gameLoop, 60);
+    // run game at 30fps
+    interval = setInterval(gameLoop, 30);
 }
 
 

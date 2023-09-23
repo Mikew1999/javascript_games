@@ -26,18 +26,19 @@ while True:
                 print("Computer wins!")
             else:
                 print("you win!")
-            break
+            continue
         case 'paper':
             if computer_choice == "rock":
                 print("you win!")
             else:
                 print("computer wins")
-            break
+            continue
         case 'scissors':
             if computer_choice == "paper":
                 print("you win!")
             else:
                 print("computer wins")
+            continue
         case _:
             print("invalid input")
-            break
+            continue
